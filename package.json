@@ -1,0 +1,15 @@
+{
+  "name": "wymscrapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "scrapShonenMagazine.js",
+  "scripts": {
+    "start": "node ./scrapShonenMagazine.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.44",
+    "node-html-parser": "^6.1.11"
+  }
+}
