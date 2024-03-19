@@ -2,14 +2,14 @@ const { parse } = require("node-html-parser");
 const Canvas = require("@napi-rs/canvas");
 const fs = require("fs");
 
-const glsc = "";
+const glsc = "kDlwJjYG62nDe90zt3an7dB2HFAtHhiYfWCh0QeBhjxGckOSSf2uLucxfPWb7lPA";
 
 const series = {
   週刊少年マガジン: {
     amagami: "甘神さんちの縁結び",
-    medaka: "黒岩メダカに私の可愛いが通じない",
     sentai: "戦隊大失格",
     cuckoos: "カッコウの許嫁",
+    "4koa": "黙示録の四騎士",
   },
   アフタヌーン: {
     princess: "7人の眠り姫",
@@ -30,16 +30,9 @@ const main = async (urlJSONs) => {
   if (!urlJSONs[0]) {
     await Promise.all(
       Object.entries(series).map(async ([key, value], index) => {
-        const res = await fetch(`https://comic-days.com/`).then((res) =>
-          res.text()
-        );
+        const res = await fetch(`https://comic-days.com/`).then((res) => res.text());
         const document = parse(res);
-        const urlMagazine = Array.from(
-          document.querySelectorAll(
-            ".gtm-top-days-premium-weekly-item,.gtm-top-days-premium-monthly-item"
-          )
-        ).filter((e) => e.querySelector("h4").innerText == key)[0].attributes
-          .href;
+        const urlMagazine = Array.from(document.querySelectorAll(".gtm-top-days-premium-weekly-item,.gtm-top-days-premium-monthly-item")).filter((e) => e.querySelector("h4").innerText == key)[0].attributes.href;
         urlJSONs[index] = urlMagazine + ".json";
       })
     );
@@ -50,9 +43,7 @@ const main = async (urlJSONs) => {
     }).then((res) => res.json());
     const starters = json.readableProduct.toc.items;
     const pages = json.readableProduct.pageStructure.pages;
-    const magSeries = Object.entries(series).filter(([index, value]) =>
-      json.readableProduct.title.startsWith(index)
-    )[0][1];
+    const magSeries = Object.entries(series).filter(([index, value]) => json.readableProduct.title.startsWith(index))[0][1];
     Object.entries(magSeries).forEach(async ([index, value]) => {
       const debut = starters.filter((item) => item.title == value);
       if (!debut) return console.log(`Pas de ${index} cette semaine`);
@@ -66,9 +57,7 @@ const main = async (urlJSONs) => {
           const folderSeries = `./${path}/${index}`;
           if (!fs.existsSync(folderSeries)) fs.mkdirSync(folderSeries);
           const addIndex = debut.length > 1 ? "_" + (i + 1) : "";
-          const folder = `${folderSeries}/${formatDate(
-            json.readableProduct.publishedAt
-          )}${addIndex}`;
+          const folder = `${folderSeries}/${formatDate(json.readableProduct.publishedAt)}${addIndex}`;
           const name = index + (debut.length > 1 ? " " + (i + 1) : "");
           if (fs.existsSync(folder)) return console.log(`${name} déjà dl`);
           fs.mkdirSync(folder);
@@ -96,9 +85,7 @@ const unscrap = async (url) => {
   const context = final.getContext("2d");
   const pieces = getCoordPieces();
 
-  const ordre_indices = [
-    0, 5, 10, 15, 4, 1, 6, 11, 16, 9, 2, 7, 12, 17, 14, 3, 8, 13, 18, 19,
-  ];
+  const ordre_indices = [0, 5, 10, 15, 4, 1, 6, 11, 16, 9, 2, 7, 12, 17, 14, 3, 8, 13, 18, 19];
 
   const largeur_piece = 272;
   const hauteur_piece = 400;
@@ -139,3 +126,9 @@ const sum = (array) => array.reduce((acc, value) => acc + value, 0);
 const formatDate = (date) => date.slice(0, 10);
 
 main(urlMag);
+// const solo = async () => {
+//   const image = await unscrap("https://cdn-img.comic-days.com/public/page/2/2550668106018036577-ad9bc99a4559313c618892e498f2debc");
+//   fs.writeFileSync(`./00.jpg`, image);
+// };
+
+// solo();
