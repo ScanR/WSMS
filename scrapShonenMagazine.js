@@ -16,6 +16,11 @@ const series = {
   },
 };
 
+const magazine = {
+  週刊少年マガジン: "wsm",
+  アフタヌーン: "afternoon",
+};
+
 const path = "./series";
 
 const urlMag = [];
@@ -28,14 +33,7 @@ const f = numberFormat.format;
 const main = async (urlJSONs) => {
   if (!fs.existsSync(path)) fs.mkdirSync(path);
   if (!urlJSONs[0]) {
-    await Promise.all(
-      Object.entries(series).map(async ([key, value], index) => {
-        const res = await fetch(`https://comic-days.com/`).then((res) => res.text());
-        const document = parse(res);
-        const urlMagazine = Array.from(document.querySelectorAll(".gtm-top-days-premium-weekly-item,.gtm-top-days-premium-monthly-item")).filter((e) => e.querySelector("h4").innerText == key)[0].attributes.href;
-        urlJSONs[index] = urlMagazine + ".json";
-      })
-    );
+    urlJSONs = await getUrlJson();
   }
   urlJSONs.forEach(async (urlJSON) => {
     const json = await fetch(urlJSON, {
@@ -68,7 +66,18 @@ const main = async (urlJSONs) => {
       );
     });
   });
+  await firstPage(urlJSONs);
 };
+
+const getUrlJson = async () =>
+  await Promise.all(
+    Object.entries(series).map(async ([key, value], index) => {
+      const res = await fetch(`https://comic-days.com/`).then((res) => res.text());
+      const document = parse(res);
+      const urlMagazine = Array.from(document.querySelectorAll(".gtm-top-days-premium-weekly-item,.gtm-top-days-premium-monthly-item")).filter((e) => e.querySelector("h4").innerText == key)[0].attributes.href;
+      return urlMagazine + ".json";
+    })
+  );
 
 const downloader = (folder) => {
   return async (value, index) => {
@@ -125,10 +134,21 @@ const sum = (array) => array.reduce((acc, value) => acc + value, 0);
 
 const formatDate = (date) => date.slice(0, 10);
 
-main(urlMag);
-// const solo = async () => {
-//   const image = await unscrap("https://cdn-img.comic-days.com/public/page/2/2550668106018036577-ad9bc99a4559313c618892e498f2debc");
-//   fs.writeFileSync(`./00.jpg`, image);
-// };
+const firstPage = async (lesUrls) => {
+  lesUrls.forEach(async (url) => {
+    const json = await fetch(url, {
+      headers: { Cookie: `glsc=${glsc}` },
+    }).then((res) => res.json());
+    const magSeries = Object.entries(magazine).filter(([index, value]) => json.readableProduct.title.startsWith(index))[0][1];
+    const urlImage = json.readableProduct.pageStructure.pages[0].src;
+    const image = await unscrap(urlImage);
+    if (!fs.existsSync("./firstPage")) fs.mkdirSync("./firstPage");
+    if (!fs.existsSync(`./firstPage/${magSeries}`)) fs.mkdirSync(`./firstPage/${magSeries}`);
+    const fichier = `./firstPage/${magSeries}/${formatDate(json.readableProduct.publishedAt)}.jpg`;
+    if (fs.existsSync(fichier)) return console.log(`${magSeries} déjà dl`);
+    fs.writeFileSync(`./${fichier}`, image);
+    console.log(`First Page ${magSeries} END`);
+  });
+};
 
-// solo();
+main(urlMag);
