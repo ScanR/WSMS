@@ -2,17 +2,16 @@ const { parse } = require("node-html-parser");
 const Canvas = require("@napi-rs/canvas");
 const fs = require("fs");
 
-const glsc = "kDlwJjYG62nDe90zt3an7dB2HFAtHhiYfWCh0QeBhjxGckOSSf2uLucxfPWb7lPA";
+const glsc = "2UEUmoYyQrlVKZzBmC26J86ufYZzcIRxBnSjeef33DQaBrriK0Zhc3MvKIGFvuh9";
 
 const series = {
   週刊少年マガジン: {
-    amagami: "甘神さんちの縁結び",
-    sentai: "戦隊大失格",
-    cuckoos: "カッコウの許嫁",
-    "4koa": "黙示録の四騎士",
+    amagami: ["甘神さんちの縁結び"],
+    sentai: ["戦隊大失格"],
   },
   アフタヌーン: {
-    princess: "7人の眠り姫",
+    princess: ["７人の眠り姫", "7人の眠り姫"],
+    omori: ["OMORI", "omori"],
   },
 };
 
@@ -23,7 +22,7 @@ const magazine = {
 
 const path = "./series";
 
-const urlMag = [];
+const urlMag = ["https://comic-days.com/magazine/14079602755160732367.json"];
 
 const numberFormat = new Intl.NumberFormat("fr-FR", {
   minimumIntegerDigits: 2,
@@ -43,7 +42,7 @@ const main = async (urlJSONs) => {
     const pages = json.readableProduct.pageStructure.pages;
     const magSeries = Object.entries(series).filter(([index, value]) => json.readableProduct.title.startsWith(index))[0][1];
     Object.entries(magSeries).forEach(async ([index, value]) => {
-      const debut = starters.filter((item) => item.title == value);
+      const debut = starters.filter((item) => value.includes(item.title));
       if (!debut) return console.log(`Pas de ${index} cette semaine`);
       await Promise.all(
         debut.map(async (serie, i) => {
