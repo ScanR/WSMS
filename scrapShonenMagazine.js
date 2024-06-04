@@ -2,7 +2,7 @@ const { parse } = require("node-html-parser");
 const Canvas = require("@napi-rs/canvas");
 const fs = require("fs");
 
-const glsc = "";
+const glsc = "2UEUmoYyQrlVKZzBmC26J86ufYZzcIRxBnSjeef33DQaBrriK0Zhc3MvKIGFvuh9";
 
 const series = {
   週刊少年マガジン: {
@@ -22,7 +22,7 @@ const magazine = {
 
 const path = "./series";
 
-const urlMag = ["https://comic-days.com/magazine/14079602755160732367.json"];
+const urlMag = [""];
 
 const numberFormat = new Intl.NumberFormat("fr-FR", {
   minimumIntegerDigits: 2,
