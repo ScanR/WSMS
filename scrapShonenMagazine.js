@@ -12,7 +12,7 @@ const series = {
   },
   アフタヌーン: {
     princess: ["７人の眠り姫", "7人の眠り姫"],
-    omori: ["OMORI", "omori"],
+    omori: ["ＯＭＯＲＩ"],
   },
 };
 
