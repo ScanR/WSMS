@@ -2,13 +2,14 @@ const { parse } = require("node-html-parser");
 const Canvas = require("@napi-rs/canvas");
 const fs = require("fs");
 
-const glsc = "2UEUmoYyQrlVKZzBmC26J86ufYZzcIRxBnSjeef33DQaBrriK0Zhc3MvKIGFvuh9";
+const glsc = "";
 
 const series = {
   週刊少年マガジン: {
     amagami: ["甘神さんちの縁結び"],
     sentai: ["戦隊大失格"],
     mayonaka: ["真夜中ハートチューン"],
+    // highwall: ["Ｈｉｇｈ　ｗａｌｌ"],
   },
   アフタヌーン: {
     princess: ["７人の眠り姫", "7人の眠り姫"],
@@ -36,12 +37,18 @@ const main = async (urlJSONs) => {
     urlJSONs = await getUrlJson();
   }
   urlJSONs.forEach(async (urlJSON) => {
-    const json = await fetch(urlJSON, {
+    const page = await fetch(urlJSON, {
       headers: { Cookie: `glsc=${glsc}` },
-    }).then((res) => res.json());
+    }).then((res) => res.text());
+    const document = parse(page);
+    const jsonBrut =
+      document.querySelector("#episode-json").attrs["data-value"];
+    const json = JSON.parse(jsonBrut);
     const starters = json.readableProduct.toc.items;
     const pages = json.readableProduct.pageStructure.pages;
-    const magSeries = Object.entries(series).filter(([index, value]) => json.readableProduct.title.startsWith(index))[0][1];
+    const magSeries = Object.entries(series).filter(([index, value]) =>
+      json.readableProduct.title.startsWith(index)
+    )[0][1];
     Object.entries(magSeries).forEach(async ([index, value]) => {
       const debut = starters.filter((item) => value.includes(item.title));
       if (!debut) return console.log(`Pas de ${index} cette semaine`);
@@ -55,7 +62,9 @@ const main = async (urlJSONs) => {
           const folderSeries = `./${path}/${index}`;
           if (!fs.existsSync(folderSeries)) fs.mkdirSync(folderSeries);
           const addIndex = debut.length > 1 ? "_" + (i + 1) : "";
-          const folder = `${folderSeries}/${formatDate(json.readableProduct.publishedAt)}${addIndex}`;
+          const folder = `${folderSeries}/${formatDate(
+            json.readableProduct.publishedAt
+          )}${addIndex}`;
           const name = index + (debut.length > 1 ? " " + (i + 1) : "");
           if (fs.existsSync(folder)) return console.log(`${name} déjà dl`);
           fs.mkdirSync(folder);
@@ -65,17 +74,24 @@ const main = async (urlJSONs) => {
         })
       );
     });
+    await firstPage(json);
   });
-  await firstPage(urlJSONs);
 };
 
 const getUrlJson = async () =>
   await Promise.all(
     Object.entries(series).map(async ([key, value], index) => {
-      const res = await fetch(`https://comic-days.com/`).then((res) => res.text());
+      const res = await fetch(`https://comic-days.com/`).then((res) =>
+        res.text()
+      );
       const document = parse(res);
-      const urlMagazine = Array.from(document.querySelectorAll(".gtm-top-days-premium-weekly-item,.gtm-top-days-premium-monthly-item")).filter((e) => e.querySelector("h4").innerText == key)[0].attributes.href;
-      return urlMagazine + ".json";
+      const urlMagazine = Array.from(
+        document.querySelectorAll(
+          ".gtm-top-days-premium-weekly-item,.gtm-top-days-premium-monthly-item"
+        )
+      ).filter((e) => e.querySelector("h4").innerText == key)[0].attributes
+        .href;
+      return urlMagazine;
     })
   );
 
@@ -94,7 +110,9 @@ const unscrap = async (url) => {
   const context = final.getContext("2d");
   const pieces = getCoordPieces();
 
-  const ordre_indices = [0, 5, 10, 15, 4, 1, 6, 11, 16, 9, 2, 7, 12, 17, 14, 3, 8, 13, 18, 19];
+  const ordre_indices = [
+    0, 5, 10, 15, 4, 1, 6, 11, 16, 9, 2, 7, 12, 17, 14, 3, 8, 13, 18, 19,
+  ];
 
   const largeur_piece = 272;
   const hauteur_piece = 400;
@@ -134,21 +152,21 @@ const sum = (array) => array.reduce((acc, value) => acc + value, 0);
 
 const formatDate = (date) => date.slice(0, 10);
 
-const firstPage = async (lesUrls) => {
-  lesUrls.forEach(async (url) => {
-    const json = await fetch(url, {
-      headers: { Cookie: `glsc=${glsc}` },
-    }).then((res) => res.json());
-    const magSeries = Object.entries(magazine).filter(([index, value]) => json.readableProduct.title.startsWith(index))[0][1];
-    const urlImage = json.readableProduct.pageStructure.pages[0].src;
-    const image = await unscrap(urlImage);
-    if (!fs.existsSync("./firstPage")) fs.mkdirSync("./firstPage");
-    if (!fs.existsSync(`./firstPage/${magSeries}`)) fs.mkdirSync(`./firstPage/${magSeries}`);
-    const fichier = `./firstPage/${magSeries}/${formatDate(json.readableProduct.publishedAt)}.jpg`;
-    if (fs.existsSync(fichier)) return console.log(`${magSeries} déjà dl`);
-    fs.writeFileSync(`./${fichier}`, image);
-    console.log(`First Page ${magSeries} END`);
-  });
+const firstPage = async (json) => {
+  const magSeries = Object.entries(magazine).filter(([index, value]) =>
+    json.readableProduct.title.startsWith(index)
+  )[0][1];
+  const urlImage = json.readableProduct.pageStructure.pages[0].src;
+  const image = await unscrap(urlImage);
+  if (!fs.existsSync("./firstPage")) fs.mkdirSync("./firstPage");
+  if (!fs.existsSync(`./firstPage/${magSeries}`))
+    fs.mkdirSync(`./firstPage/${magSeries}`);
+  const fichier = `./firstPage/${magSeries}/${formatDate(
+    json.readableProduct.publishedAt
+  )}.jpg`;
+  if (fs.existsSync(fichier)) return console.log(`${magSeries} déjà dl`);
+  fs.writeFileSync(`./${fichier}`, image);
+  console.log(`First Page ${magSeries} END`);
 };
 
 main(urlMag);
