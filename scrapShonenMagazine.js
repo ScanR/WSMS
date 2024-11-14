@@ -123,14 +123,16 @@ const unscrap = async (url) => {
   const width = image.width;
   const final = new Canvas.Canvas(width, height);
   const context = final.getContext("2d");
-  const pieces = getCoordPieces();
+
+  let largeur_piece = 272;
+  if (width == 1125) largeur_piece = 280;
+  const hauteur_piece = 400;
+
+  const pieces = getCoordPieces(width, largeur_piece);
 
   const ordre_indices = [
     0, 5, 10, 15, 4, 1, 6, 11, 16, 9, 2, 7, 12, 17, 14, 3, 8, 13, 18, 19,
   ];
-
-  const largeur_piece = 272;
-  const hauteur_piece = 400;
 
   ordre_indices.forEach((indice_partie, index) => {
     const src = pieces[indice_partie];
@@ -142,8 +144,14 @@ const unscrap = async (url) => {
   return await final.encode("jpeg");
 };
 
-const getCoordPieces = () => {
-  const largeur_colonnes = [272, 272, 272, 272, 27];
+const getCoordPieces = (width, largeur_piece) => {
+  const largeur_colonnes = [
+    largeur_piece,
+    largeur_piece,
+    largeur_piece,
+    largeur_piece,
+    width - largeur_piece * 4,
+  ];
   const hauteur_lignes = 400;
   const pieces = [];
   for (ligne = 0; ligne < 4; ligne++) {
