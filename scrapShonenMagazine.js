@@ -46,6 +46,21 @@ const main = async (urlJSONs) => {
     const json = JSON.parse(jsonBrut);
     const starters = json.readableProduct.toc.items;
     const pages = json.readableProduct.pageStructure.pages;
+    if (urlJSON.includes("volume")) {
+      if (!fs.existsSync("./volume")) fs.mkdirSync("./volume");
+      const titleSerie = json.readableProduct.series.title;
+      const pathVolume = `./volume/${titleSerie}`;
+      if (!fs.existsSync(pathVolume)) fs.mkdirSync(pathVolume);
+      const name = json.readableProduct.title;
+      const folder = `${pathVolume}/${name}`;
+      if (fs.existsSync(folder)) return console.log(`${name} déjà dl`);
+      fs.mkdirSync(folder);
+      const pagesVolume = pages.filter((e) => e.src);
+      const download = downloader(folder);
+      await Promise.all(pagesVolume.map(download));
+      console.log(`${name} end`);
+      return;
+    }
     const magSeries = Object.entries(series).filter(([index, value]) =>
       json.readableProduct.title.startsWith(index)
     )[0][1];
